@@ -1,9 +1,15 @@
 package com.example.gmaps;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentActivity;
 
+import android.content.res.Resources;
 import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -14,6 +20,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -29,6 +36,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Marker markerName;
     CameraUpdate center, zoom;
     private Location currentLocation;
+    private static final String TAG = MapsActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +51,33 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         btnSearch = findViewById(R.id.btnSearch);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.map_options,menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.normal_map:
+                mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+                return true;
+            case R.id.hybrid_map:
+                mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+                return true;
+            case R.id.satellite_map:
+                mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+                return true;
+            case R.id.terrain_map:
+                mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -55,6 +90,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+
+        try {
+            boolean success = googleMap.setMapStyle(
+              MapStyleOptions.loadRawResourceStyle(this,R.raw.map_style));
+
+            if (!success) {
+                Log.e(TAG, "Style parsing failed.");
+            }
+        }catch(Resources.NotFoundException e){
+            Log.e(TAG,"Can't find style. Error: ",e);
+        }
 
 
         List<LatitudeLongitude> latLngs = new ArrayList<>();

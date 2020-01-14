@@ -14,6 +14,8 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 
+import com.example.gmaps.Interface.MapsApi;
+import com.example.gmaps.Url.Url;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -26,6 +28,10 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -102,8 +108,41 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.e(TAG,"Can't find style. Error: ",e);
         }
 
+        MapsApi apiMaps = Url.getInstance().create(MapsApi.class);
+        Call<List<LatitudeLongitude>> listCall = apiMaps.getMapsdata();
 
-        List<LatitudeLongitude> latLngs = new ArrayList<>();
+        listCall.enqueue(new Callback<List<LatitudeLongitude>>() {
+            @Override
+            public void onResponse(Call<List<LatitudeLongitude>> call, Response<List<LatitudeLongitude>> response) {
+                List<LatitudeLongitude> latLngs = response.body();
+                for(LatitudeLongitude latlon : latLngs)
+                {
+                    double longid = latlon.getLon();
+                    double latid = latlon.getLat();
+
+                    center =  CameraUpdateFactory.newLatLng(new LatLng(27.706793,85.330050));
+                    zoom = CameraUpdateFactory.zoomTo(13);
+                    mMap.addMarker(new MarkerOptions().title(latlon.getMarker())
+                            .position(new LatLng(latid,longid))
+                    );
+
+                    mMap.moveCamera(center);
+                    mMap.animateCamera(zoom);
+                    mMap.getUiSettings().setZoomControlsEnabled(true);
+
+                    //Log.d("Goole Maps ", "onResponse: " + latlon.getMarker());
+                }
+                //Toast.makeText(MapsActivity.this, "Successfully called api", Toast.LENGTH_SHORT).show();
+                //System.out.println("the response is: "+response);
+            }
+
+            @Override
+            public void onFailure(Call<List<LatitudeLongitude>> call, Throwable t) {
+
+            }
+        });
+
+       /* List<LatitudeLongitude> latLngs = new ArrayList<>();
         latLngs.add(new LatitudeLongitude(27.7052354,85.3294158,"Softwarica College of IT"));
         latLngs.add(new LatitudeLongitude(27.70482,85.3293997,"Gopal Dai ko Chatamari"));
 
@@ -118,14 +157,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             mMap.moveCamera(center);
             mMap.animateCamera(zoom);
-            mMap.setMyLocationEnabled(true);/*
-            mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);*/
+            mMap.setMyLocationEnabled(true);*//*
+            mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);*//*
             mMap.getUiSettings().setZoomControlsEnabled(true);
-        }
+        }*/
 
-        // Add a marker in Sydney and move the camera
-      /*  LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));*/
     }
 }
